@@ -1,4 +1,15 @@
 //! Fixed-size circular buffer of exactly 2 elements.
+//!
+//! # Examples
+//! ```rust
+//! use ring_pair::RingPair;
+//!
+//! let mut pair = RingPair::new(10);
+//! pair.push(20);
+//! pair.push(30);
+//!
+//! assert_eq!(pair.as_pair(), (&20, &30));
+//! ```
 
 use core::fmt;
 use core::hash::{Hash, Hasher};
@@ -12,6 +23,14 @@ pub struct RingPair<T> {
 
 impl<T: Copy> RingPair<T> {
     /// Creates a new `RingPair` with both slots initialized to the given value.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let pair = RingPair::new("x");
+    /// assert_eq!(pair.as_pair(), (&"x", &"x"));
+    /// ```
     pub fn new(initial: T) -> Self {
         Self {
             buffer: [initial; 2],
@@ -22,6 +41,17 @@ impl<T: Copy> RingPair<T> {
 
 impl<T> RingPair<T> {
     /// Pushes a new value, making it the newest.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let mut pair = RingPair::new(1);
+    /// pair.push(2);
+    ///
+    /// assert_eq!(pair.older(), &1);
+    /// assert_eq!(pair.newer(), &2);
+    /// ```
     pub fn push(&mut self, value: T) {
         self.newest = 1 - self.newest;
         self.buffer[self.newest] = value;
@@ -29,6 +59,19 @@ impl<T> RingPair<T> {
 
     /// Advances to the next slot and returns a mutable reference to it,
     /// allowing in-place initialization without copying.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let mut pair = RingPair::from((String::from("old"), String::from("stale")));
+    /// pair.push_with(|slot| {
+    ///     slot.clear();
+    ///     slot.push_str("new");
+    /// });
+    ///
+    /// assert_eq!(pair.as_pair(), (&String::from("stale"), &String::from("new")));
+    /// ```
     pub fn push_with<F>(&mut self, f: F)
     where
         F: FnOnce(&mut T),
@@ -79,6 +122,14 @@ impl<T: Hash> Hash for RingPair<T> {
 
 impl<T> From<[T; 2]> for RingPair<T> {
     /// Creates a `RingPair` from `[older, newer]`.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let pair = RingPair::from([3, 4]);
+    /// assert_eq!(pair.as_pair(), (&3, &4));
+    /// ```
     fn from([older, newer]: [T; 2]) -> Self {
         Self {
             buffer: [newer, older],
@@ -89,6 +140,14 @@ impl<T> From<[T; 2]> for RingPair<T> {
 
 impl<T> From<(T, T)> for RingPair<T> {
     /// Creates a `RingPair` from `(older, newer)`.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let pair = RingPair::from(("older", "newer"));
+    /// assert_eq!(pair.as_pair(), (&"older", &"newer"));
+    /// ```
     fn from((older, newer): (T, T)) -> Self {
         Self {
             buffer: [newer, older],

@@ -1,18 +1,13 @@
 //! Fixed-size circular buffer of exactly 2 elements.
 
+use core::fmt;
+use core::hash::{Hash, Hasher};
+
 /// Circular buffer holding exactly 2 elements with O(1) push.
+#[derive(Clone, Copy, Default)]
 pub struct RingPair<T> {
     buffer: [T; 2],
     newest: usize,
-}
-
-impl<T: Default> Default for RingPair<T> {
-    fn default() -> Self {
-        Self {
-            buffer: [T::default(), T::default()],
-            newest: 0,
-        }
-    }
 }
 
 impl<T: Copy> RingPair<T> {
@@ -50,5 +45,54 @@ impl<T> RingPair<T> {
     /// Returns a reference to the older element.
     pub fn older(&self) -> &T {
         &self.buffer[1 - self.newest]
+    }
+
+    /// Returns both elements as `(older, newer)`.
+    pub fn as_pair(&self) -> (&T, &T) {
+        (self.older(), self.newer())
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for RingPair<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RingPair")
+            .field("older", self.older())
+            .field("newer", self.newer())
+            .finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for RingPair<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.older() == other.older() && self.newer() == other.newer()
+    }
+}
+
+impl<T: Eq> Eq for RingPair<T> {}
+
+impl<T: Hash> Hash for RingPair<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.older().hash(state);
+        self.newer().hash(state);
+    }
+}
+
+impl<T> From<[T; 2]> for RingPair<T> {
+    /// Creates a `RingPair` from `[older, newer]`.
+    fn from([older, newer]: [T; 2]) -> Self {
+        Self {
+            buffer: [newer, older],
+            newest: 0,
+        }
+    }
+}
+
+impl<T> From<(T, T)> for RingPair<T> {
+    /// Creates a `RingPair` from `(older, newer)`.
+    fn from((older, newer): (T, T)) -> Self {
+        Self {
+            buffer: [newer, older],
+            newest: 0,
+        }
     }
 }

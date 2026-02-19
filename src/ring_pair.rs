@@ -14,12 +14,13 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 
+use crate::boxed_ring_pair::BoxedRingPair;
 use crate::inner::RingPairInner;
 
 /// Circular buffer holding exactly 2 elements with O(1) push.
 #[derive(Clone, Copy, Default)]
 pub struct RingPair<T> {
-    inner: RingPairInner<[T; 2]>,
+    pub(crate) inner: RingPairInner<[T; 2]>,
 }
 
 impl<T: Clone> RingPair<T> {
@@ -139,5 +140,21 @@ impl<T> From<(T, T)> for RingPair<T> {
     /// ```
     fn from((older, newer): (T, T)) -> Self {
         Self { inner: RingPairInner { buffer: [newer, older], newest: false } }
+    }
+}
+
+impl<T> From<BoxedRingPair<T>> for RingPair<T> {
+    /// Moves a `BoxedRingPair` onto the stack.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::{BoxedRingPair, RingPair};
+    ///
+    /// let boxed = BoxedRingPair::from((1, 2));
+    /// let inline = RingPair::from(boxed);
+    /// assert_eq!(inline.as_pair(), (&1, &2));
+    /// ```
+    fn from(pair: BoxedRingPair<T>) -> Self {
+        Self { inner: RingPairInner { buffer: *pair.inner.buffer, newest: pair.inner.newest } }
     }
 }

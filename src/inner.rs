@@ -26,21 +26,21 @@ pub(crate) struct RingPairInner<S> {
 
 impl<S: Buf> RingPairInner<S> {
     pub(crate) fn newer(&self) -> &S::Item {
-        self.buffer.get(self.newest as usize)
+        self.buffer.get(usize::from(self.newest))
     }
 
     pub(crate) fn older(&self) -> &S::Item {
-        self.buffer.get(!self.newest as usize)
+        self.buffer.get(usize::from(!self.newest))
     }
 
     pub(crate) fn push(&mut self, value: S::Item) {
         self.newest = !self.newest;
-        *self.buffer.get_mut(self.newest as usize) = value;
+        *self.buffer.get_mut(usize::from(self.newest)) = value;
     }
 
     pub(crate) fn push_with<F: FnOnce(&mut S::Item)>(&mut self, f: F) {
         self.newest = !self.newest;
-        f(self.buffer.get_mut(self.newest as usize));
+        f(self.buffer.get_mut(usize::from(self.newest)));
     }
 }
 

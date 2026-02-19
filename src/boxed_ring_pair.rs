@@ -87,16 +87,19 @@ impl<T> BoxedRingPair<T> {
     }
 
     /// Returns a reference to the newer element.
+    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
     pub fn newer(&self) -> &T {
         self.inner.newer()
     }
 
     /// Returns a reference to the older element.
+    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
     pub fn older(&self) -> &T {
         self.inner.older()
     }
 
     /// Returns both elements as `(older, newer)`.
+    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
     pub fn as_pair(&self) -> (&T, &T) {
         (self.inner.older(), self.inner.newer())
     }

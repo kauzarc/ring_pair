@@ -14,6 +14,7 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 
+#[cfg(feature = "alloc")]
 use crate::boxed_ring_pair::BoxedRingPair;
 use crate::inner::RingPairInner;
 
@@ -34,7 +35,12 @@ impl<T: Clone> RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"x", &"x"));
     /// ```
     pub fn new(initial: T) -> Self {
-        Self { inner: RingPairInner { buffer: [initial.clone(), initial], newest: false } }
+        Self {
+            inner: RingPairInner {
+                buffer: [initial.clone(), initial],
+                newest: false,
+            },
+        }
     }
 }
 
@@ -124,7 +130,12 @@ impl<T> From<[T; 2]> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&3, &4));
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
-        Self { inner: RingPairInner { buffer: [newer, older], newest: false } }
+        Self {
+            inner: RingPairInner {
+                buffer: [newer, older],
+                newest: false,
+            },
+        }
     }
 }
 
@@ -139,10 +150,16 @@ impl<T> From<(T, T)> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"older", &"newer"));
     /// ```
     fn from((older, newer): (T, T)) -> Self {
-        Self { inner: RingPairInner { buffer: [newer, older], newest: false } }
+        Self {
+            inner: RingPairInner {
+                buffer: [newer, older],
+                newest: false,
+            },
+        }
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<T> From<BoxedRingPair<T>> for RingPair<T> {
     /// Moves a `BoxedRingPair` onto the stack.
     ///
@@ -155,6 +172,11 @@ impl<T> From<BoxedRingPair<T>> for RingPair<T> {
     /// assert_eq!(inline.as_pair(), (&1, &2));
     /// ```
     fn from(pair: BoxedRingPair<T>) -> Self {
-        Self { inner: RingPairInner { buffer: *pair.inner.buffer, newest: pair.inner.newest } }
+        Self {
+            inner: RingPairInner {
+                buffer: *pair.inner.buffer,
+                newest: pair.inner.newest,
+            },
+        }
     }
 }

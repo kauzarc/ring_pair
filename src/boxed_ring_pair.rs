@@ -14,6 +14,8 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 
+use alloc::boxed::Box;
+
 use crate::inner::RingPairInner;
 use crate::ring_pair::RingPair;
 
@@ -87,19 +89,28 @@ impl<T> BoxedRingPair<T> {
     }
 
     /// Returns a reference to the newer element.
-    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
+    #[expect(
+        clippy::must_use_candidate,
+        reason = "pure getter; ignoring the result is never a useful pattern"
+    )]
     pub fn newer(&self) -> &T {
         self.inner.newer()
     }
 
     /// Returns a reference to the older element.
-    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
+    #[expect(
+        clippy::must_use_candidate,
+        reason = "pure getter; ignoring the result is never a useful pattern"
+    )]
     pub fn older(&self) -> &T {
         self.inner.older()
     }
 
     /// Returns both elements as `(older, newer)`.
-    #[expect(clippy::must_use_candidate, reason = "pure getter; ignoring the result is never a useful pattern")]
+    #[expect(
+        clippy::must_use_candidate,
+        reason = "pure getter; ignoring the result is never a useful pattern"
+    )]
     pub fn as_pair(&self) -> (&T, &T) {
         (self.inner.older(), self.inner.newer())
     }
@@ -140,7 +151,10 @@ impl<T> From<[T; 2]> for BoxedRingPair<T> {
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
         Self {
-            inner: RingPairInner { buffer: Box::new([newer, older]), newest: false },
+            inner: RingPairInner {
+                buffer: Box::new([newer, older]),
+                newest: false,
+            },
         }
     }
 }
@@ -157,7 +171,10 @@ impl<T> From<(T, T)> for BoxedRingPair<T> {
     /// ```
     fn from((older, newer): (T, T)) -> Self {
         Self {
-            inner: RingPairInner { buffer: Box::new([newer, older]), newest: false },
+            inner: RingPairInner {
+                buffer: Box::new([newer, older]),
+                newest: false,
+            },
         }
     }
 }
@@ -174,6 +191,11 @@ impl<T> From<RingPair<T>> for BoxedRingPair<T> {
     /// assert_eq!(boxed.as_pair(), (&1, &2));
     /// ```
     fn from(pair: RingPair<T>) -> Self {
-        Self { inner: RingPairInner { buffer: Box::new(pair.inner.buffer), newest: pair.inner.newest } }
+        Self {
+            inner: RingPairInner {
+                buffer: Box::new(pair.inner.buffer),
+                newest: pair.inner.newest,
+            },
+        }
     }
 }

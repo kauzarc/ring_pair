@@ -8,14 +8,23 @@ pub(crate) trait Buf {
 
 impl<T> Buf for [T; 2] {
     type Item = T;
-    fn get(&self, idx: usize) -> &T { &self[idx] }
-    fn get_mut(&mut self, idx: usize) -> &mut T { &mut self[idx] }
+    fn get(&self, idx: usize) -> &T {
+        &self[idx]
+    }
+    fn get_mut(&mut self, idx: usize) -> &mut T {
+        &mut self[idx]
+    }
 }
 
-impl<T> Buf for Box<[T; 2]> {
+#[cfg(feature = "alloc")]
+impl<T> Buf for alloc::boxed::Box<[T; 2]> {
     type Item = T;
-    fn get(&self, idx: usize) -> &T { &(**self)[idx] }
-    fn get_mut(&mut self, idx: usize) -> &mut T { &mut (**self)[idx] }
+    fn get(&self, idx: usize) -> &T {
+        &(**self)[idx]
+    }
+    fn get_mut(&mut self, idx: usize) -> &mut T {
+        &mut (**self)[idx]
+    }
 }
 
 #[derive(Clone, Copy, Default)]
@@ -43,7 +52,6 @@ impl<S: Buf> RingPairInner<S> {
         f(self.buffer.get_mut(usize::from(self.newest)));
     }
 }
-
 
 impl<S: Buf> PartialEq for RingPairInner<S>
 where

@@ -14,14 +14,15 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 
+use crate::inner::RingPairInner;
+
 /// Circular buffer holding exactly 2 elements with O(1) push.
 #[derive(Clone, Copy, Default)]
 pub struct RingPair<T> {
-    buffer: [T; 2],
-    newest: usize,
+    inner: RingPairInner<[T; 2]>,
 }
 
-impl<T: Copy> RingPair<T> {
+impl<T: Clone> RingPair<T> {
     /// Creates a new `RingPair` with both slots initialized to the given value.
     ///
     /// # Examples
@@ -32,10 +33,7 @@ impl<T: Copy> RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"x", &"x"));
     /// ```
     pub fn new(initial: T) -> Self {
-        Self {
-            buffer: [initial; 2],
-            newest: 0,
-        }
+        Self { inner: RingPairInner { buffer: [initial.clone(), initial], newest: 0 } }
     }
 }
 
@@ -53,8 +51,7 @@ impl<T> RingPair<T> {
     /// assert_eq!(pair.newer(), &2);
     /// ```
     pub fn push(&mut self, value: T) {
-        self.newest = 1 - self.newest;
-        self.buffer[self.newest] = value;
+        self.inner.push(value);
     }
 
     /// Advances to the next slot and returns a mutable reference to it,
@@ -72,42 +69,38 @@ impl<T> RingPair<T> {
     ///
     /// assert_eq!(pair.as_pair(), (&String::from("stale"), &String::from("new")));
     /// ```
-    pub fn push_with<F>(&mut self, f: F)
-    where
-        F: FnOnce(&mut T),
-    {
-        self.newest = 1 - self.newest;
-        f(&mut self.buffer[self.newest]);
+    pub fn push_with<F: FnOnce(&mut T)>(&mut self, f: F) {
+        self.inner.push_with(f);
     }
 
     /// Returns a reference to the newer element.
     pub fn newer(&self) -> &T {
-        &self.buffer[self.newest]
+        self.inner.newer()
     }
 
     /// Returns a reference to the older element.
     pub fn older(&self) -> &T {
-        &self.buffer[1 - self.newest]
+        self.inner.older()
     }
 
     /// Returns both elements as `(older, newer)`.
     pub fn as_pair(&self) -> (&T, &T) {
-        (self.older(), self.newer())
+        (self.inner.older(), self.inner.newer())
     }
 }
 
 impl<T: fmt::Debug> fmt::Debug for RingPair<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RingPair")
-            .field("older", self.older())
-            .field("newer", self.newer())
+            .field("older", self.inner.older())
+            .field("newer", self.inner.newer())
             .finish()
     }
 }
 
 impl<T: PartialEq> PartialEq for RingPair<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.older() == other.older() && self.newer() == other.newer()
+        self.inner == other.inner
     }
 }
 
@@ -115,8 +108,7 @@ impl<T: Eq> Eq for RingPair<T> {}
 
 impl<T: Hash> Hash for RingPair<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.older().hash(state);
-        self.newer().hash(state);
+        self.inner.hash(state);
     }
 }
 
@@ -131,10 +123,7 @@ impl<T> From<[T; 2]> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&3, &4));
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
-        Self {
-            buffer: [newer, older],
-            newest: 0,
-        }
+        Self { inner: RingPairInner { buffer: [newer, older], newest: 0 } }
     }
 }
 
@@ -149,9 +138,6 @@ impl<T> From<(T, T)> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"older", &"newer"));
     /// ```
     fn from((older, newer): (T, T)) -> Self {
-        Self {
-            buffer: [newer, older],
-            newest: 0,
-        }
+        Self { inner: RingPairInner { buffer: [newer, older], newest: 0 } }
     }
 }

@@ -17,6 +17,7 @@
 //! assert_eq!(boxed.as_pair(), (&String::from("a"), &String::from("b")));
 //! ```
 
+mod inner;
 mod ring_pair;
 mod boxed_ring_pair;
 

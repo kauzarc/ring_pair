@@ -13,13 +13,13 @@
 
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use std::boxed::Box;
+
+use crate::inner::RingPairInner;
 
 /// Circular buffer holding exactly 2 elements with boxed storage and O(1) push.
 #[derive(Clone, Default)]
 pub struct BoxedRingPair<T> {
-    buffer: Box<[T; 2]>,
-    newest: usize,
+    inner: RingPairInner<Box<[T; 2]>>,
 }
 
 impl<T: Clone> BoxedRingPair<T> {
@@ -34,8 +34,10 @@ impl<T: Clone> BoxedRingPair<T> {
     /// ```
     pub fn new(initial: T) -> Self {
         Self {
-            buffer: Box::new([initial.clone(), initial]),
-            newest: 0,
+            inner: RingPairInner {
+                buffer: Box::new([initial.clone(), initial]),
+                newest: 0,
+            },
         }
     }
 }
@@ -54,8 +56,7 @@ impl<T> BoxedRingPair<T> {
     /// assert_eq!(pair.newer(), &2);
     /// ```
     pub fn push(&mut self, value: T) {
-        self.newest = 1 - self.newest;
-        self.buffer[self.newest] = value;
+        self.inner.push(value);
     }
 
     /// Advances to the next slot and allows in-place initialization.
@@ -72,42 +73,38 @@ impl<T> BoxedRingPair<T> {
     ///
     /// assert_eq!(pair.as_pair(), (&String::from("stale"), &String::from("new")));
     /// ```
-    pub fn push_with<F>(&mut self, f: F)
-    where
-        F: FnOnce(&mut T),
-    {
-        self.newest = 1 - self.newest;
-        f(&mut self.buffer[self.newest]);
+    pub fn push_with<F: FnOnce(&mut T)>(&mut self, f: F) {
+        self.inner.push_with(f);
     }
 
     /// Returns a reference to the newer element.
     pub fn newer(&self) -> &T {
-        &self.buffer[self.newest]
+        self.inner.newer()
     }
 
     /// Returns a reference to the older element.
     pub fn older(&self) -> &T {
-        &self.buffer[1 - self.newest]
+        self.inner.older()
     }
 
     /// Returns both elements as `(older, newer)`.
     pub fn as_pair(&self) -> (&T, &T) {
-        (self.older(), self.newer())
+        (self.inner.older(), self.inner.newer())
     }
 }
 
 impl<T: fmt::Debug> fmt::Debug for BoxedRingPair<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("BoxedRingPair")
-            .field("older", self.older())
-            .field("newer", self.newer())
+            .field("older", self.inner.older())
+            .field("newer", self.inner.newer())
             .finish()
     }
 }
 
 impl<T: PartialEq> PartialEq for BoxedRingPair<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.older() == other.older() && self.newer() == other.newer()
+        self.inner == other.inner
     }
 }
 
@@ -115,8 +112,7 @@ impl<T: Eq> Eq for BoxedRingPair<T> {}
 
 impl<T: Hash> Hash for BoxedRingPair<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.older().hash(state);
-        self.newer().hash(state);
+        self.inner.hash(state);
     }
 }
 
@@ -132,8 +128,7 @@ impl<T> From<[T; 2]> for BoxedRingPair<T> {
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
         Self {
-            buffer: Box::new([newer, older]),
-            newest: 0,
+            inner: RingPairInner { buffer: Box::new([newer, older]), newest: 0 },
         }
     }
 }
@@ -150,8 +145,7 @@ impl<T> From<(T, T)> for BoxedRingPair<T> {
     /// ```
     fn from((older, newer): (T, T)) -> Self {
         Self {
-            buffer: Box::new([newer, older]),
-            newest: 0,
+            inner: RingPairInner { buffer: Box::new([newer, older]), newest: 0 },
         }
     }
 }

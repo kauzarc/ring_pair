@@ -17,6 +17,14 @@ use core::hash::{Hash, Hasher};
 use crate::inner::RingPairInner;
 
 /// Circular buffer holding exactly 2 elements with boxed storage and O(1) push.
+///
+/// The two elements live on the heap, so moving a `BoxedRingPair<T>` is always
+/// cheap regardless of the size of `T`. Prefer this over [`RingPair`] when `T`
+/// is large enough that keeping two copies on the stack is undesirable (e.g.
+/// large arrays, big structs). For small `T`, prefer [`RingPair`] to avoid the
+/// heap allocation.
+///
+/// [`RingPair`]: crate::RingPair
 #[derive(Clone, Default)]
 pub struct BoxedRingPair<T> {
     inner: RingPairInner<Box<[T; 2]>>,

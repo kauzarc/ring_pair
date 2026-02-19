@@ -18,7 +18,7 @@ impl<T> Buf for Box<[T; 2]> {
     fn get_mut(&mut self, idx: usize) -> &mut T { &mut (**self)[idx] }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Default)]
 pub(crate) struct RingPairInner<S> {
     pub(crate) buffer: S,
     pub(crate) newest: usize,
@@ -44,13 +44,6 @@ impl<S: Buf> RingPairInner<S> {
     }
 }
 
-impl<S: Copy> Copy for RingPairInner<S> {}
-
-impl<S: Default> Default for RingPairInner<S> {
-    fn default() -> Self {
-        Self { buffer: S::default(), newest: 0 }
-    }
-}
 
 impl<S: Buf> PartialEq for RingPairInner<S>
 where

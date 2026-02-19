@@ -21,26 +21,26 @@ impl<T> Buf for Box<[T; 2]> {
 #[derive(Clone, Copy, Default)]
 pub(crate) struct RingPairInner<S> {
     pub(crate) buffer: S,
-    pub(crate) newest: usize,
+    pub(crate) newest: bool,
 }
 
 impl<S: Buf> RingPairInner<S> {
     pub(crate) fn newer(&self) -> &S::Item {
-        self.buffer.get(self.newest)
+        self.buffer.get(self.newest as usize)
     }
 
     pub(crate) fn older(&self) -> &S::Item {
-        self.buffer.get(1 - self.newest)
+        self.buffer.get(!self.newest as usize)
     }
 
     pub(crate) fn push(&mut self, value: S::Item) {
-        self.newest = 1 - self.newest;
-        *self.buffer.get_mut(self.newest) = value;
+        self.newest = !self.newest;
+        *self.buffer.get_mut(self.newest as usize) = value;
     }
 
     pub(crate) fn push_with<F: FnOnce(&mut S::Item)>(&mut self, f: F) {
-        self.newest = 1 - self.newest;
-        f(self.buffer.get_mut(self.newest));
+        self.newest = !self.newest;
+        f(self.buffer.get_mut(self.newest as usize));
     }
 }
 

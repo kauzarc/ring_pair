@@ -36,7 +36,7 @@ impl<T: Clone> BoxedRingPair<T> {
         Self {
             inner: RingPairInner {
                 buffer: Box::new([initial.clone(), initial]),
-                newest: 0,
+                newest: false,
             },
         }
     }
@@ -128,7 +128,7 @@ impl<T> From<[T; 2]> for BoxedRingPair<T> {
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
         Self {
-            inner: RingPairInner { buffer: Box::new([newer, older]), newest: 0 },
+            inner: RingPairInner { buffer: Box::new([newer, older]), newest: false },
         }
     }
 }
@@ -145,7 +145,7 @@ impl<T> From<(T, T)> for BoxedRingPair<T> {
     /// ```
     fn from((older, newer): (T, T)) -> Self {
         Self {
-            inner: RingPairInner { buffer: Box::new([newer, older]), newest: 0 },
+            inner: RingPairInner { buffer: Box::new([newer, older]), newest: false },
         }
     }
 }

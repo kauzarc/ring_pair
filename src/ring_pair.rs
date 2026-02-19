@@ -33,7 +33,7 @@ impl<T: Clone> RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"x", &"x"));
     /// ```
     pub fn new(initial: T) -> Self {
-        Self { inner: RingPairInner { buffer: [initial.clone(), initial], newest: 0 } }
+        Self { inner: RingPairInner { buffer: [initial.clone(), initial], newest: false } }
     }
 }
 
@@ -123,7 +123,7 @@ impl<T> From<[T; 2]> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&3, &4));
     /// ```
     fn from([older, newer]: [T; 2]) -> Self {
-        Self { inner: RingPairInner { buffer: [newer, older], newest: 0 } }
+        Self { inner: RingPairInner { buffer: [newer, older], newest: false } }
     }
 }
 
@@ -138,6 +138,6 @@ impl<T> From<(T, T)> for RingPair<T> {
     /// assert_eq!(pair.as_pair(), (&"older", &"newer"));
     /// ```
     fn from((older, newer): (T, T)) -> Self {
-        Self { inner: RingPairInner { buffer: [newer, older], newest: 0 } }
+        Self { inner: RingPairInner { buffer: [newer, older], newest: false } }
     }
 }

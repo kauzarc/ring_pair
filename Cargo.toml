@@ -5,6 +5,7 @@ edition = "2024"
 description = "Tiny fixed-size ring buffer specialized for exactly two elements"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/kauzarc/ring_pair"
+documentation = "https://docs.rs/ring_pair"
 keywords = ["ring-buffer", "circular-buffer", "no-std"]
 categories = ["data-structures", "no-std"]
 

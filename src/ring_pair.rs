@@ -94,6 +94,24 @@ impl<T> RingPair<T> {
     pub fn as_pair(&self) -> (&T, &T) {
         (self.inner.older(), self.inner.newer())
     }
+
+    /// Returns an iterator over the elements, from oldest to newest.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use ring_pair::RingPair;
+    ///
+    /// let mut pair = RingPair::new(1);
+    /// pair.push(2);
+    /// pair.push(3);
+    ///
+    /// let collected: Vec<_> = pair.iter().collect();
+    /// assert_eq!(collected, [&2, &3]);
+    /// ```
+    #[must_use]
+    pub fn iter(&self) -> crate::Iter<'_, T> {
+        crate::Iter::new(self.inner.older(), self.inner.newer())
+    }
 }
 
 impl<T: fmt::Debug> fmt::Debug for RingPair<T> {

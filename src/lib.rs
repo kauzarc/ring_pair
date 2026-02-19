@@ -38,8 +38,10 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 mod boxed_ring_pair;
 mod inner;
+mod iter;
 mod ring_pair;
 
 #[cfg(feature = "alloc")]
 pub use boxed_ring_pair::BoxedRingPair;
+pub use iter::Iter;
 pub use ring_pair::RingPair;
